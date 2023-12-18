@@ -38,7 +38,7 @@ let chão = {
     },
 
     renderiza: function () {
-        for (let i = 0; i <= this.quantidade; i++) {
+        for (let i = 0; i < this.quantidade; i++) {
             this.insere()
             this.quantidade--
         }
@@ -46,17 +46,24 @@ let chão = {
         let img = new Image()
         img.src = "imagens/chao.png"
 
+        // renderiza as imagens
         for (let i = 0; i < this.lista.length; i++) {
             let lista = this.lista[i]
-
+            
             ctx.drawImage(img, parseInt(lista.x), lista.y)
+        }
+
+        for (let i = 0; i < this.lista.length; i++) {
+            let lista = this.lista[i]
 
             // animações
             if (this.animações) {
                 lista.x -= parseInt(velocidadeDeJogo)
-
-                if (lista.x + lista.largura <= 0) {
-                   lista.x = this.x
+                if (lista.x + lista.largura < 0) {
+                    this.x -= 224
+                    this.insere()
+                    this.lista.splice(i, 1)
+                    i--
                 }
             }
         }
