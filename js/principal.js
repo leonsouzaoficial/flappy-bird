@@ -10,43 +10,53 @@ let velocidadeDeJogo = 1
 // sons
 let pulo = new Audio()
 pulo.src = "sons/pulo.wav"
+let pancada = new Audio()
+pancada.src = "sons/pancada.wav"
 
 // chão
 let chão = {
-    lista: [],
-    quantidade: 1,
+    quantidade: 20,
     x: 0,
     animações: false,
-    
-    insere: function () {
-        for (let i = 0; i < this.quantidade; i++) {
-            this.lista.push({
-                largura: 224,
-                altura: 112,
-                x: this.x,
-                y: telaAltura - 112,
-                velocidade: 0
-            })
-            this.x += 224
+    lista: [],
+
+    redimensiona: function () {
+        for (let i = 0; i < this.lista.length; i++) {
+            this.lista[i].y = telaAltura-112
         }
     },
 
+    insere: function () {
+        this.lista.push({
+            x: this.x,
+            y: telaAltura-112,
+            largura: 224,
+            altura: 112
+        })
+
+        this.x += 224
+    },
+
     renderiza: function () {
-        this.insere()
+        for (let i = 0; i <= this.quantidade; i++) {
+            this.insere()
+            this.quantidade--
+        }
 
         let img = new Image()
         img.src = "imagens/chao.png"
 
         for (let i = 0; i < this.lista.length; i++) {
-            ctx.drawImage(img, this.lista[i].x, this.lista[i].y)
+            let lista = this.lista[i]
 
-            // animações do chão
+            ctx.drawImage(img, parseInt(lista.x), lista.y)
+
+            // animações
             if (this.animações) {
-                this.lista[i].x -= velocidadeDeJogo
+                lista.x -= parseInt(velocidadeDeJogo)
 
-                if (this.lista[i].x + this.lista[i].largura <= 0) {
-                    this.lista.splice(0, 1)
-                    i--
+                if (lista.x + lista.largura <= 0) {
+                   lista.x = this.x
                 }
             }
         }
@@ -67,6 +77,14 @@ let pássaro = {
     gravidade: 0.3,
     velocidade: 0,
     força_do_pulo: 8,
+
+    redimensiona: function () {
+        this.x = parseInt(0.1 * telaLargura)  
+    },
+
+    reseta: function () {
+        this.y = parseInt((telaAltura - pássaro.altura)/2)
+    },
 
     renderiza: function () {
         let img = new Image()
@@ -111,6 +129,16 @@ let pássaro = {
             this.y = 0
             this.velocidade = 0
         }
+
+        // pássaro cai no chão
+        if (this.y + this.altura >= chão.lista[0].y) {
+            this.y = chão.lista[0].y - this.altura
+            this.velocidade = 0
+            if (estadoDeJogo == "jogando") {
+                pancada.play()
+            }
+            estadoDeJogo = "perdeu"
+        }
     },
 
     pula: function () {
@@ -127,10 +155,8 @@ function redimensiona () {
     tela.width = telaLargura
     tela.height = telaAltura
 
-    chão.quantidade = parseInt(telaLargura/224)
-
-    pássaro.x = parseInt(0.1 * telaLargura)
-    pássaro.y = parseInt((telaAltura - pássaro.altura)/2)
+    chão.redimensiona()
+    pássaro.redimensiona()
 }
 
 function renderiza () {
@@ -165,6 +191,7 @@ function renderiza () {
     else {
         pássaro.animações = false
         pássaro.físicas = false
+        chão.animações = false
 
         let quadro = new Image()
         quadro.src = "imagens/fim-de-jogo.png"
@@ -183,7 +210,8 @@ function toque () {
     }
 
     else {
-
+        pássaro.reseta()
+        estadoDeJogo = "menu"
     }
 }
 
@@ -198,6 +226,7 @@ function principal () {
     tela.width = telaLargura
     tela.height = telaAltura
     tela.addEventListener("click", toque)
+    pássaro.reseta()
 
     roda()
 }
