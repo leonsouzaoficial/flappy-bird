@@ -13,11 +13,65 @@ pulo.src = "sons/pulo.wav"
 let pancada = new Audio()
 pancada.src = "sons/pancada.wav"
 
+// cenário
+let cenário = {
+    largura: 276,
+    altura: 204,
+    quantidade: 5,
+    animações: false,
+    lista: [],
+    x: 0,
+    y: 0,
+
+    insere: function () {
+        this.lista.push({
+            largura: this.largura,
+            altura: this.altura,
+            x: this.x,
+            y: this.y
+        })
+        this.x += this.largura
+    },
+
+    redimensiona: function () {
+        for (let i = 0; i < this.lista.length; i ++) {
+            let lista = this.lista[i]
+
+            lista.y = telaAltura-112-204
+        }
+    },
+
+    renderiza: function () {
+        this.redimensiona()
+
+        for (let i = 0; i < this.quantidade; i ++) {
+            this.insere()
+            this.quantidade--
+        }
+
+        let img = new Image()
+        img.src = "imagens/cenario.png"
+
+        for (let i = 0; i < this.lista.length; i ++) {
+            let lista = this.lista[i]
+
+            // renderiza só se estiver na tela
+            if (lista.x + lista.largura >= 0 && lista.x <= telaLargura) {
+                ctx.drawImage(img, lista.x, lista.y)
+            }
+
+            // animações
+            if (this.animações) {
+                parseFloat(lista.x -= velocidadeDeJogo)
+            }
+        }
+    }
+}
+
 // chão
 let chão = {
     quantidade: 20,
     x: 0,
-    animações: false,
     lista: [],
 
     redimensiona: function () {
@@ -51,21 +105,6 @@ let chão = {
             let lista = this.lista[i]
             
             ctx.drawImage(img, parseInt(lista.x), lista.y)
-        }
-
-        for (let i = 0; i < this.lista.length; i++) {
-            let lista = this.lista[i]
-
-            // animações
-            if (this.animações) {
-                lista.x -= parseInt(velocidadeDeJogo)
-                if (lista.x + lista.largura < 0) {
-                    this.x -= 224
-                    this.insere()
-                    this.lista.splice(i, 1)
-                    i--
-                }
-            }
         }
     }
 }
@@ -156,8 +195,8 @@ let pássaro = {
 }
 
 function redimensiona () {
-    telaLargura = window.innerWidth -1
-    telaAltura = window.innerHeight -4
+    telaLargura = parseInt(window.innerWidth-1)
+    telaAltura = parseInt(window.innerHeight-4)
 
     tela.width = telaLargura
     tela.height = telaAltura
@@ -175,11 +214,12 @@ function renderiza () {
     ctx.fillRect(0, 0, telaLargura, telaAltura)
 
     // renderiza independente do estado de jogo
+    cenário.renderiza()
     chão.renderiza()
     pássaro.renderiza()
 
     if (estadoDeJogo == "menu") {
-        chão.animações = true
+        cenário.animações = true
 
         pássaro.animações = true
         pássaro.físicas = false
@@ -191,14 +231,17 @@ function renderiza () {
     }
 
     else if (estadoDeJogo == "jogando") {
+        cenário.animações = true
+
         pássaro.animações = true
         pássaro.físicas = true
     }
 
     else {
+        cenário.animações = false
+
         pássaro.animações = false
         pássaro.físicas = false
-        chão.animações = false
 
         let quadro = new Image()
         quadro.src = "imagens/fim-de-jogo.png"
