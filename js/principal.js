@@ -17,8 +17,7 @@ pancada.src = "sons/pancada.wav"
 let cenário = {
     largura: 276,
     altura: 204,
-    quantidade: 5,
-    animações: false,
+    quantidade: 20,
     lista: [],
     x: 0,
     y: 0,
@@ -59,11 +58,6 @@ let cenário = {
             if (lista.x + lista.largura >= 0 && lista.x <= telaLargura) {
                 ctx.drawImage(img, lista.x, lista.y)
             }
-
-            // animações
-            if (this.animações) {
-                parseFloat(lista.x -= velocidadeDeJogo)
-            }
         }
     }
 }
@@ -73,6 +67,7 @@ let chão = {
     quantidade: 20,
     x: 0,
     lista: [],
+    animações: false,
 
     redimensiona: function () {
         for (let i = 0; i < this.lista.length; i++) {
@@ -104,7 +99,23 @@ let chão = {
         for (let i = 0; i < this.lista.length; i++) {
             let lista = this.lista[i]
             
-            ctx.drawImage(img, parseInt(lista.x), lista.y)
+            // renderiza só se estiver na tela
+            if (lista.x <= telaLargura && lista.x + lista.largura >= 0) {
+                ctx.drawImage(img, parseInt(lista.x), lista.y)
+            }
+        }
+
+        // animações
+        if (this.animações) {
+            for (let i in this.lista) {
+                let lista = this.lista[i]
+
+                lista.x -= velocidadeDeJogo
+
+                if (lista.x + lista.largura <= 0) {
+                    lista.x = telaLargura
+                }
+            }
         }
     }
 }
@@ -219,8 +230,7 @@ function renderiza () {
     pássaro.renderiza()
 
     if (estadoDeJogo == "menu") {
-        cenário.animações = true
-
+        chão.animações = true
         pássaro.animações = true
         pássaro.físicas = false
 
@@ -231,15 +241,13 @@ function renderiza () {
     }
 
     else if (estadoDeJogo == "jogando") {
-        cenário.animações = true
-
+        chão.animações = true
         pássaro.animações = true
         pássaro.físicas = true
     }
 
     else {
-        cenário.animações = false
-
+        chão.animações = false
         pássaro.animações = false
         pássaro.físicas = false
 
