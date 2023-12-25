@@ -6,6 +6,7 @@ let telaAltura = 300
 
 let estadoDeJogo = "menu"
 let velocidadeDeJogo = 1
+let tempoDeTransição = 30
 
 // sons
 let pulo = new Audio()
@@ -134,6 +135,8 @@ let pássaro = {
     gravidade: 0.3,
     velocidade: 0,
     força_do_pulo: 8,
+    rotação: 0,
+    tempoDeRotação: 10,
 
     redimensiona: function () {
         this.x = parseInt(0.1 * telaLargura)  
@@ -141,13 +144,37 @@ let pássaro = {
 
     reseta: function () {
         this.y = parseInt((telaAltura - pássaro.altura)/2)
+        this.rotação = 0
+        this.tempoDeRotação = 20
     },
 
     renderiza: function () {
         let img = new Image()
         img.src = "imagens/passaros.png"
 
-        ctx.drawImage(img, this.srcX, this.srcY, this.largura, this.altura, this.x, this.y, this.largura, this.altura)
+        // tempo que dura a rotação
+        if (this.rotação != 0) {
+            this.tempoDeRotação--
+            this.largura = 31
+            this.altura = 28
+        }
+
+        // quando acabar o tempo de rotação ele volta ao normal
+        if (this.tempoDeRotação == 0) {
+            this.rotação = 0
+            this.largura = 34
+            this.altura = 24
+        }
+
+        // cálculos que geram a imagem do pássaro e sua rotação
+        ctx.save()
+
+        ctx.translate(this.x + this.largura / 2,this.y + this.altura / 2)
+        ctx.rotate(this.rotação) 
+
+        ctx.drawImage(img, this.srcX, this.srcY, 34, 24, -this.largura/2, -this.altura/2, 34, 24)
+        
+        ctx.restore()
 
         // animações do pássaro
         if (this.animações) {
@@ -158,11 +185,11 @@ let pássaro = {
             }
 
             else if (this.quadros > 10 && this.quadros <= 20) {
-                this.srcY = this.altura
+                this.srcY = 24
             }
 
             else if (this.quadros > 20 && this.quadros <= 30) {
-                this.srcY = this.altura*2
+                this.srcY = 24*2
             }
 
             else {
@@ -199,6 +226,9 @@ let pássaro = {
     },
 
     pula: function () {
+        this.rotação = -45 * Math.PI / 180
+        this.tempoDeRotação = 20
+
         this.velocidade = 0
         this.velocidade -= this.força_do_pulo
         pulo.play()
@@ -247,6 +277,11 @@ function renderiza () {
     }
 
     else {
+        pássaro.rotação = 0
+        if (tempoDeTransição > 0) {
+            tempoDeTransição--
+        }
+
         chão.animações = false
         pássaro.animações = false
         pássaro.físicas = false
@@ -268,8 +303,11 @@ function toque () {
     }
 
     else {
-        pássaro.reseta()
-        estadoDeJogo = "menu"
+        if (tempoDeTransição == 0) {
+            pássaro.reseta()
+            tempoDeTransição = 30
+            estadoDeJogo = "menu"
+        }
     }
 }
 
