@@ -15,6 +15,8 @@ let pulo = new Audio()
 pulo.src = "sons/pulo.wav"
 let pancada = new Audio()
 pancada.src = "sons/pancada.wav"
+let ponto = new Audio()
+ponto.src = "sons/ponto.wav"
 
 // cenário
 let cenário = {
@@ -184,6 +186,16 @@ let canos = {
                 if (lista.x + lista.largura <= 0) {
                     this.lista.splice(i, 1)
                 }
+
+                // colide com o pássaro
+                if (pássaro.x + pássaro.largura >= lista.x && pássaro.x <= lista.x + lista.largura && pássaro.y + pássaro.altura >= lista.y || pássaro.x + pássaro.largura >= lista.x && pássaro.x <= lista.x + lista.largura && pássaro.y <= lista.y - this.espaço) {
+                    estadoDeJogo = "perdeu"
+                }
+
+                // pontua
+                if (pássaro.x > lista.x + lista.largura && pássaro.x <= lista.x + lista.largura + velocidadeDeJogo) {
+                    ponto.play()
+                }
             }
         }
 
@@ -228,6 +240,7 @@ let pássaro = {
         this.y = parseInt((telaAltura - pássaro.altura)/2)
         this.rotação = 0
         this.tempoDeRotação = 20
+        this.velocidade = 0
     },
 
     renderiza: function () {
@@ -344,7 +357,7 @@ function renderiza () {
 
     if (estadoDeJogo == "menu") {
         chão.animações = true
-        canos.animações = true
+        canos.animações = false
         pássaro.animações = true
         pássaro.físicas = false
 
