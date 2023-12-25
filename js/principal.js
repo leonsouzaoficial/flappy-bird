@@ -4,7 +4,17 @@ const ctx = tela.getContext("2d")
 let telaLargura = 300
 let telaAltura = 300
 
-let telaMaior = 0
+let melhor = localStorage.getItem("melhor")
+if (melhor != Number) {
+    localStorage.setItem("melhor", 0)
+}
+let pontos = 0
+
+// fontes
+let fonte = new FontFace("fonte", "url(fontes/8-bit-hud.ttf)")
+fonte.load().then(function(font) {
+    document.fonts.add(font)
+})
 
 let estadoDeJogo = "menu"
 let velocidadeDeJogo = 1
@@ -17,6 +27,8 @@ let pancada = new Audio()
 pancada.src = "sons/pancada.wav"
 let ponto = new Audio()
 ponto.src = "sons/ponto.wav"
+let caiu = new Audio()
+caiu.src = "sons/caiu.wav"
 
 // cenário
 let cenário = {
@@ -118,7 +130,7 @@ let chão = {
                 lista.x -= velocidadeDeJogo
 
                 if (lista.x + lista.largura <= 0) {
-                    lista.x = telaLargura
+                    lista.x = screen.width
                 }
             }
         }
@@ -189,12 +201,21 @@ let canos = {
 
                 // colide com o pássaro
                 if (pássaro.x + pássaro.largura >= lista.x && pássaro.x <= lista.x + lista.largura && pássaro.y + pássaro.altura >= lista.y || pássaro.x + pássaro.largura >= lista.x && pássaro.x <= lista.x + lista.largura && pássaro.y <= lista.y - this.espaço) {
+                    caiu.play()
                     estadoDeJogo = "perdeu"
                 }
 
                 // pontua
                 if (pássaro.x > lista.x + lista.largura && pássaro.x <= lista.x + lista.largura + velocidadeDeJogo) {
                     ponto.play()
+                    
+                    if (pontos < 999) {
+                        pontos++
+                    }
+
+                    if (melhor < pontos) {
+                        localStorage.setItem("melhor", pontos)
+                    }
                 }
             }
         }
@@ -246,6 +267,10 @@ let pássaro = {
     renderiza: function () {
         let img = new Image()
         img.src = "imagens/passaros.png"
+
+        // atualiza o x e y
+        this.x = parseInt(this.x)
+        this.y = parseInt(this.y)
 
         // tempo que dura a rotação
         if (this.rotação != 0) {
@@ -299,12 +324,7 @@ let pássaro = {
         }
 
         // limita o pássaro na tela
-        if (this.y + this.altura >= telaAltura) {
-            this.y = telaAltura - this.altura
-            this.velocidade = 0
-        }
-
-        else if (this.y <= 0) {
+        if (this.y <= 0) {
             this.y = 0
             this.velocidade = 0
         }
@@ -313,10 +333,12 @@ let pássaro = {
         if (this.y + this.altura >= chão.lista[0].y) {
             this.y = chão.lista[0].y - this.altura
             this.velocidade = 0
+            this.altura = 24
+            this.srcY = 24
             if (estadoDeJogo == "jogando") {
                 pancada.play()
+                estadoDeJogo = "perdeu"
             }
-            estadoDeJogo = "perdeu"
         }
     },
 
@@ -346,7 +368,7 @@ function renderiza () {
     ctx.clearRect(0, 0, telaLargura, telaAltura)
 
     // colore a tela
-    ctx.fillStyle = "#50beff"
+    ctx.fillStyle = "#0094FF"
     ctx.fillRect(0, 0, telaLargura, telaAltura)
 
     // renderiza independente do estado de jogo
@@ -354,12 +376,24 @@ function renderiza () {
     chão.renderiza()
     canos.renderiza()
     pássaro.renderiza()
+    melhor = localStorage.getItem("melhor")
 
     if (estadoDeJogo == "menu") {
+        // reseta os pontos
+        pontos = 0
+
         chão.animações = true
         canos.animações = false
         pássaro.animações = true
         pássaro.físicas = false
+
+        // mostra o recorde
+        ctx.textAlign = "left"
+        ctx.font = "10px fonte"
+        ctx.fillStyle = "#F1EC94"
+        ctx.fillText("Melhor: " + melhor, 10, 20)
+        ctx.fillStyle = "#CD993C"
+        ctx.fillText("Melhor: " + melhor, 10, 18)
 
         let quadro = new Image()
         quadro.src = "imagens/se-prepare.png"
@@ -372,6 +406,14 @@ function renderiza () {
         canos.animações = true
         pássaro.animações = true
         pássaro.físicas = true
+
+        // mostra os pontos
+        ctx.font = "20px fonte"
+        ctx.textAlign = "right"
+        ctx.fillStyle = "#F1EC94"
+        ctx.fillText("" + pontos, telaLargura-20, 40)
+        ctx.fillStyle = "#CD993C"
+        ctx.fillText("" + pontos, telaLargura-20, 38)
     }
 
     else {
@@ -383,12 +425,51 @@ function renderiza () {
         chão.animações = false
         canos.animações = false
         pássaro.animações = false
-        pássaro.físicas = false
+        pássaro.físicas = true
 
         let quadro = new Image()
         quadro.src = "imagens/fim-de-jogo.png"
 
         ctx.drawImage(quadro, parseInt((telaLargura - quadro.width)/2), parseInt((telaAltura - quadro.height)/2))
+
+        // mostra os pontos, medálias e récordes
+        // mostra os pontos
+        ctx.font = "10px fonte"
+        ctx.textAlign = "right"
+        ctx.fillStyle = "#F1EC94"
+        ctx.fillText("" + pontos, parseInt((telaLargura - quadro.width)/2) + 205, parseInt((telaAltura - quadro.height)/2) + 92)
+        ctx.fillStyle = "#CD993C"
+        ctx.fillText("" + pontos, parseInt((telaLargura - quadro.width)/2) + 205, parseInt((telaAltura - quadro.height)/2) + 90)
+
+        // mostra o récorde
+        ctx.font = "10px fonte"
+        ctx.textAlign = "right"
+        ctx.fillStyle = "#F1EC94"
+        ctx.fillText("" + melhor, parseInt((telaLargura - quadro.width)/2) + 205, parseInt((telaAltura - quadro.height)/2) + 135)
+        ctx.fillStyle = "#CD993C"
+        ctx.fillText("" + melhor, parseInt((telaLargura - quadro.width)/2) + 205, parseInt((telaAltura - quadro.height)/2) + 133)
+
+        // mostra a medália
+        let medália = new Image()
+        medália.src = "imagens/medalias.png"
+
+        let mx = parseInt((telaLargura - quadro.width)/2) + 26
+        let my = parseInt((telaAltura - quadro.height)/2) + 87
+        let msrcX = 0
+        let msrcY = 0
+        let tamanho = 44
+
+        if (pontos >= 10 && pontos < 50) {
+            ctx.drawImage(medália,msrcX, msrcY, tamanho, tamanho, mx, my, tamanho, tamanho)
+        }
+
+        else if (pontos >= 50 && pontos < 100) {
+            ctx.drawImage(medália, 44, msrcY, tamanho, tamanho, mx, my, tamanho, tamanho)
+        }
+
+        else if (pontos >= 100) {
+            ctx.drawImage(medália, 88, msrcY, tamanho, tamanho, mx, my, tamanho, tamanho)
+        }
     }
 }
 

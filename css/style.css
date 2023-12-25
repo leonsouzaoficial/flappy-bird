@@ -1,5 +1,10 @@
 @charset "UTF-8";
 
+@font-face {
+    font-family: "8bit";
+    src: url(../fontes/8-bit-hud.ttf) format(truetype);
+}
+
 * {
     margin: 0px;
     padding: 0px;
@@ -12,4 +17,5 @@ body {
 
 canvas {
     background-color: rgb(68, 67, 67);
+    font-family: "8bit", sans-serif;
 }
