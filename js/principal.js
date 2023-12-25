@@ -4,6 +4,8 @@ const ctx = tela.getContext("2d")
 let telaLargura = 300
 let telaAltura = 300
 
+let telaMaior = 0
+
 let estadoDeJogo = "menu"
 let velocidadeDeJogo = 1
 let tempoDeTransição = 30
@@ -117,6 +119,86 @@ let chão = {
                     lista.x = telaLargura
                 }
             }
+        }
+    }
+}
+
+// canos
+let canos = {
+    largura: 52,
+    altura: 400,
+    lista: [],
+    animações: false,
+    tempo: 0,
+    espaço: 200,
+    x: screen.width,
+    y: telaAltura,
+    srcX: 0,
+    srcY: 0,
+
+    redimensiona: function () {
+        for (let i in this.lista) {
+            let lista = this.lista[i]
+
+            this.x = telaLargura
+            lista.y = telaAltura -112 -lista.altura
+        }
+    },
+
+    reseta: function () {
+        this.tempo = 200
+        this.lista.splice(0, this.lista.length)
+    },
+
+    insere: function () {
+        this.lista.push({
+            largura: this.largura,
+            altura: 100 + Math.floor(300 * Math.random()),
+            x: this.x,
+            y: this.y
+        })
+    },
+
+    renderiza: function () {
+        if (this.tempo == 0) {
+            this.tempo = 100 + Math.floor(200 * Math.random())
+            this.x = screen.width
+            this.insere()
+        }
+
+        // animações
+        if (this.animações) {
+            this.tempo -= velocidadeDeJogo
+
+            // redimensiona
+            if (this.lista.length > 0) {
+                this.redimensiona()
+            }
+
+            for (let i in this.lista) {
+                let lista = this.lista[i]
+
+                lista.x -= velocidadeDeJogo
+
+                // quando sai da tela
+                if (lista.x + lista.largura <= 0) {
+                    this.lista.splice(i, 1)
+                }
+            }
+        }
+
+        // renderiza os objetos
+        for (let i in this.lista) {
+            let lista = this.lista[i]
+
+            let img = new Image()
+            img.src = "imagens/canos.png"
+
+            // parte de cima dos canos
+            ctx.drawImage(img, this.srcX+this.largura, this.srcY,this.largura, 400, lista.x, lista.y-this.espaço-400, lista.largura, 400)
+
+            // parte de baixo dos canos
+            ctx.drawImage(img, this.srcX, this.srcY, lista.largura, lista.altura, lista.x, lista.y, lista.largura, lista.altura)
         }
     }
 }
@@ -257,10 +339,12 @@ function renderiza () {
     // renderiza independente do estado de jogo
     cenário.renderiza()
     chão.renderiza()
+    canos.renderiza()
     pássaro.renderiza()
 
     if (estadoDeJogo == "menu") {
         chão.animações = true
+        canos.animações = true
         pássaro.animações = true
         pássaro.físicas = false
 
@@ -272,6 +356,7 @@ function renderiza () {
 
     else if (estadoDeJogo == "jogando") {
         chão.animações = true
+        canos.animações = true
         pássaro.animações = true
         pássaro.físicas = true
     }
@@ -283,6 +368,7 @@ function renderiza () {
         }
 
         chão.animações = false
+        canos.animações = false
         pássaro.animações = false
         pássaro.físicas = false
 
@@ -305,6 +391,7 @@ function toque () {
     else {
         if (tempoDeTransição == 0) {
             pássaro.reseta()
+            canos.reseta()
             tempoDeTransição = 30
             estadoDeJogo = "menu"
         }
